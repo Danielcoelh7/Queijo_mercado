@@ -3,9 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FFD54F">
+<link rel="apple-touch-icon" href="icon-192.png">
+    
     <title>Coelho Queijos</title>
+    <div id="receiptModal" class="modal-overlay">
+        <div class="modal-card">
+            <h3 style="text-align:center; margin-bottom:5px;">Nota do Pedido</h3>
+            
+            <div style="background:#e8f5e9; border:1px solid #4CAF50; border-radius:8px; padding:10px; margin-bottom:15px; text-align:center;">
+                <p style="font-size:0.8rem; margin-bottom:5px; font-weight:bold; color:#2E7D32;">Chave PIX (Celular):</p>
+                <div style="font-family:monospace; font-size:1.1rem; background:white; padding:5px; border-radius:4px; border:1px dashed #ccc;">
+                    13988534927
+                </div>
+                <small style="color:#555; font-size:0.7rem;">João Batista Coelho</small>
+            </div>
+            <div id="receiptText" style="background:#f4f4f4; padding:15px; font-family:monospace; white-space:pre-wrap; max-height:200px; overflow-y:auto; margin-bottom:15px; font-size:0.85rem;"></div>
+            
+            <button onclick="sendWhatsapp()" style="width:100%; padding:15px; background:#25D366; color:white; border:none; border-radius:10px; font-weight:bold; margin-bottom:10px;">📲 Enviar Comprovante</button>
+            <button onclick="closeReceipt()" style="width:100%; padding:10px; background:none; border:1px solid red; color:red; border-radius:10px;">Fechar</button>
+        </div>
+    </div>
+    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧀</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧀 </text></svg>">
     <style>
         /* =========================================
            1. ESTILOS GERAIS
@@ -250,6 +273,18 @@
     </footer>
 
     <script>
+
+        // --- REGISTRAR PWA (NOVO) ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(() => console.log('App pronto para instalar!'))
+                    .catch((err) => console.log('Erro no PWA:', err));
+            });
+        }
+
+
+
         // CONFIGURAÇÃO - COLOQUE SUAS CHAVES AQUI
         const BIN_ID = '696ad1eeae596e708fe18e2b'; 
         const API_KEY = '$2a$10$11iqh1McgX6s1NSao6L0W.71TsQU602UNg2yJFCzKKYcz1E7p8ZOK'; 
@@ -357,10 +392,18 @@
                             <button class="add-btn" onclick="addToCart(${p.id})" ${isSoldOut?'disabled':''}>${isSoldOut?'Indisponível':'Adicionar'}</button>
 
                             <div class="admin-panel">
-                                <label class="admin-label">Editar Estoque:</label>
-                                <input type="number" id="admin-stock-${p.id}" class="admin-input" value="${p.stock}">
+                                <div style="display:flex; gap:5px; margin-bottom:5px;">
+                                    <div style="flex:1;">
+                                        <label class="admin-label">Estoque:</label>
+                                        <input type="number" id="admin-stock-${p.id}" class="admin-input" value="${p.stock}">
+                                    </div>
+                                    <div style="flex:1;">
+                                        <label class="admin-label">Preço (R$):</label>
+                                        <input type="number" id="admin-price-${p.id}" class="admin-input" value="${p.price}" step="0.50">
+                                    </div>
+                                </div>
                                 <div class="admin-actions">
-                                    <button class="btn-admin btn-save" onclick="adminUpdateStock(${p.id})">💾 SALVAR</button>
+                                    <button class="btn-admin btn-save" onclick="adminUpdateData(${p.id})">💾 SALVAR</button>
                                     <button class="btn-admin btn-toggle" onclick="adminToggleStatus(${p.id})">${p.soldOut?'ATIVAR':'ESGOTAR'}</button>
                                 </div>
                             </div>
@@ -445,15 +488,35 @@
                 renderCatalog();
             } else { showToast("Senha errada", "error"); }
         }
-        function adminUpdateStock(id) {
-            const input = document.getElementById(`admin-stock-${id}`);
-            const val = parseInt(input.value);
+       function adminUpdateData(id) {
+            // Pega os inputs
+            const stockInput = document.getElementById(`admin-stock-${id}`);
+            const priceInput = document.getElementById(`admin-price-${id}`);
+            
+            const newStock = parseInt(stockInput.value);
+            const newPrice = parseFloat(priceInput.value);
+
             const p = products.find(x => x.id === id);
-            if(p) { 
-                p.stock = val; 
-                if(p.stock > 0) p.soldOut = false; 
+            
+            if(p) {
+                // Atualiza Estoque
+                p.stock = newStock;
+                // Atualiza Preço (se for válido)
+                if(!isNaN(newPrice) && newPrice > 0) {
+                    p.price = newPrice;
+                }
+
+                // Lógica automática de Esgotado
+                if(p.stock > 0) p.soldOut = false;
                 if(p.stock <= 0) p.soldOut = true;
-                saveDataOnline().then(() => renderCatalog()); 
+
+                // Salva na nuvem e atualiza a tela
+                saveDataOnline().then(() => {
+                    renderCatalog();
+                    // Atualiza carrinho caso o preço tenha mudado e alguém tenha no carrinho
+                    // (Opcional, mas boa prática: limpar carrinho ou recalcular)
+                    updateCartUI(); 
+                });
             }
         }
         function adminToggleStatus(id) {
