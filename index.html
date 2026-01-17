@@ -219,6 +219,10 @@
     <header class="header">
         <div class="container">
             <img src="logo.png" onerror="this.src='coelho quejos (1).png'" alt="Coelho Queijos" class="logo-img">
+            <div id="installAppContainer" style="display:none; padding:10px; text-align:center; background:#FFF3E0;">
+    <p style="margin-bottom:5px; font-size:0.9rem;">Gostou? Instale nosso App:</p>
+    <button id="installAppBtn" style="background:black; color:white; border:none; padding:10px 20px; border-radius:20px; font-weight:bold;">📲 INSTALAR AGORA</button>
+</div>
         </div>
     </header>
 
@@ -423,6 +427,8 @@
             el.value = val;
         }
         function addToCart(id) {
+            // Vibrar o celular por 200ms (funciona em Android)
+    if (navigator.vibrate) navigator.vibrate(200);
             const p = products.find(x => x.id === id);
             const qty = parseInt(document.getElementById(`qty-${id}`).value);
             if(p.soldOut || p.stock <= 0) return showToast("Esgotado!", "error");
@@ -433,6 +439,7 @@
             document.getElementById(`qty-${id}`).value = 1;
             updateCartUI();
             showToast("Adicionado!", "success");
+            
         }
         function updateCartUI() {
             const container = document.getElementById('cartItemsContainer');
@@ -529,6 +536,28 @@
             document.getElementById('toast-container').appendChild(t);
             setTimeout(()=>t.classList.add('visible'),10); setTimeout(()=>t.remove(),3000);
         }
+
+            let deferredPrompt;
+const installContainer = document.getElementById('installAppContainer');
+const installBtn = document.getElementById('installAppBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installContainer.style.display = 'block'; // Mostra o botão
+});
+
+installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            installContainer.style.display = 'none';
+        }
+        deferredPrompt = null;
+    }
+});
+
     </script>
 </body>
 </html>
