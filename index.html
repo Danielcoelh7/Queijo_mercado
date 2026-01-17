@@ -289,7 +289,7 @@
 
         async function loadDataOnline() {
             showToast("Carregando...", "info");
-            if(BIN_ID.includes("696ad1eeae596e708fe18e2b")) { products = JSON.parse(JSON.stringify(defaultProducts)); renderCatalog(); return; }
+            if(BIN_ID.includes("COLE_SEU")) { products = JSON.parse(JSON.stringify(defaultProducts)); renderCatalog(); return; }
             try {
                 const res = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': API_KEY } });
                 if (!res.ok) throw new Error();
@@ -303,7 +303,7 @@
         }
 
         async function saveDataOnline() {
-            if(BIN_ID.includes("696ad1eeae596e708fe18e2b")) return showToast("Configure as chaves!", "error");
+            if(BIN_ID.includes("COLE_SEU")) return showToast("Configure as chaves!", "error");
             showToast("Salvando...", "info");
             try {
                 await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify(products) });
