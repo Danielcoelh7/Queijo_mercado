@@ -3,41 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-    <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#FFD54F">
-<link rel="apple-touch-icon" href="icon-192.png">
-    
     <title>Coelho Queijos</title>
-    <div id="receiptModal" class="modal-overlay">
-        <div class="modal-card">
-            <h3 style="text-align:center; margin-bottom:5px;">Nota do Pedido</h3>
-            
-            <div style="background:#e8f5e9; border:1px solid #4CAF50; border-radius:8px; padding:10px; margin-bottom:15px; text-align:center;">
-                <p style="font-size:0.8rem; margin-bottom:5px; font-weight:bold; color:#2E7D32;">Chave PIX (Celular):</p>
-                <div style="font-family:monospace; font-size:1.1rem; background:white; padding:5px; border-radius:4px; border:1px dashed #ccc;">
-                    13988534927
-                </div>
-                <small style="color:#555; font-size:0.7rem;">João Batista Coelho</small>
-            </div>
-            <div id="receiptText" style="background:#f4f4f4; padding:15px; font-family:monospace; white-space:pre-wrap; max-height:200px; overflow-y:auto; margin-bottom:15px; font-size:0.85rem;"></div>
-            
-            <button onclick="sendWhatsapp()" style="width:100%; padding:15px; background:#25D366; color:white; border:none; border-radius:10px; font-weight:bold; margin-bottom:10px;">📲 Enviar Comprovante</button>
-            <button onclick="closeReceipt()" style="width:100%; padding:10px; background:none; border:1px solid red; color:red; border-radius:10px;">Fechar</button>
-        </div>
-    </div>
     
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FFD54F">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧀</text></svg>">
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧀 </text></svg>">
+    
     <style>
         /* =========================================
-           1. ESTILOS GERAIS
+           1. ESTILOS GERAIS & ACESSIBILIDADE
            ========================================= */
         :root {
             --primary: #FFD54F;      /* Amarelo Logo */
             --accent: #000000;       /* Preto */
-            --danger: #FF5252;       /* Vermelho */
-            --success: #4CAF50;      /* Verde */
+            --danger: #d32f2f;       /* Vermelho Escuro (Contraste) */
+            --success: #2E7D32;      /* Verde Escuro */
             --bg-body: #FAFAFA;
             --radius: 20px;
         }
@@ -47,159 +31,103 @@
         body { 
             font-family: 'Poppins', sans-serif; 
             background-color: var(--bg-body); 
-            color: #333; 
-            padding-bottom: 120px; 
+            color: #222; /* Texto bem escuro */
+            padding-bottom: 140px; /* Espaço extra no final */
+            font-size: 18px; /* Fonte base aumentada para idosos */
         }
 
-        input, button { font-family: inherit; font-size: 1rem; }
+        input, button, select { font-family: inherit; font-size: 1rem; }
         .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
 
         /* HEADER */
         .header { 
-            background: var(--primary); 
-            padding: 15px 0; 
-            text-align: center; 
-            border-bottom-left-radius: 30px; 
-            border-bottom-right-radius: 30px; 
+            background: var(--primary); padding: 15px 0; text-align: center; 
+            border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; 
             box-shadow: 0 4px 15px rgba(255, 213, 79, 0.4); 
             position: sticky; top: 0; z-index: 1000; 
         }
+        .logo-img { max-width: 160px; height: auto; display: block; margin: 0 auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+
+        /* INSTALAR APP (SÓ MOBILE) */
+        #installAppContainer { display:none; padding:15px; text-align:center; background:#212121; color:white; margin-bottom: 20px; }
         
-        .logo-img { 
-            max-width: 160px; 
-            height: auto; 
-            display: block; 
-            margin: 0 auto; 
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        /* Esconder botão instalar no PC */
+        @media (min-width: 1024px) {
+            #installAppContainer { display: none !important; }
         }
 
-        /* BUSCA E CATEGORIAS */
+        /* BUSCA & FILTROS */
         .search-section { padding: 25px 0 15px 0; }
-        .search-input { 
-            width: 100%; padding: 15px 25px; 
-            border: 2px solid transparent; border-radius: 50px; 
-            background: white; box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
-            outline: none; transition: 0.3s;
-        }
-        .search-input:focus { border-color: var(--primary); }
+        .search-input { width: 100%; padding: 15px 25px; border: 2px solid #ddd; border-radius: 50px; outline: none; transition: 0.3s; font-size: 1.1rem; }
+        .search-input:focus { border-color: var(--primary); background: white; }
 
-        .category-scroll { 
-            display: flex; gap: 10px; overflow-x: auto; 
-            padding: 10px 4px 20px 4px; scrollbar-width: none; 
-        }
-        .category-pill { 
-            background: white; padding: 10px 20px; 
-            border-radius: 30px; white-space: nowrap; 
-            font-weight: 600; color: #666; cursor: pointer; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px solid transparent;
-        }
-        .category-pill.active { 
-            background: var(--accent); color: var(--primary); 
-            transform: scale(1.05); 
-        }
+        .category-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 10px 4px 25px 4px; scrollbar-width: none; }
+        .category-pill { background: white; padding: 12px 25px; border-radius: 30px; white-space: nowrap; font-weight: 600; color: #555; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px solid transparent; font-size: 1rem; }
+        .category-pill.active { background: var(--accent); color: var(--primary); transform: scale(1.05); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
 
-        /* PRODUTOS */
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
-        
-        .product-card { 
-            background: white; border-radius: var(--radius); 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
-            overflow: hidden; display: flex; flex-direction: column; 
-            position: relative; 
-        }
+        /* PRODUTOS (DESIGN GRANDE) */
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 20px; }
+        .product-card { background: white; border-radius: var(--radius); box-shadow: 0 5px 15px rgba(0,0,0,0.05); overflow: hidden; display: flex; flex-direction: column; position: relative; border: 1px solid #eee; }
         .product-card.sold-out { opacity: 0.7; filter: grayscale(100%); }
 
-        .product-img-container { width: 100%; height: 160px; background: #eee; position: relative; }
+        .product-img-container { width: 100%; height: 180px; background: #f0f0f0; position: relative; }
         .product-img { width: 100%; height: 100%; object-fit: cover; }
         
-        .sold-out-badge { 
-            position: absolute; top: 10px; right: 10px; 
-            background: var(--danger); color: white; 
-            font-size: 0.7rem; font-weight: 800; 
-            padding: 5px 10px; border-radius: 20px; 
-            display: none; 
-        }
+        .sold-out-badge { position: absolute; top: 10px; right: 10px; background: var(--danger); color: white; font-size: 0.8rem; font-weight: 800; padding: 5px 12px; border-radius: 20px; display: none; }
         .product-card.sold-out .sold-out-badge { display: block; }
 
         .product-info { padding: 15px; flex-grow: 1; }
-        .product-cat { font-size: 0.7rem; font-weight: 800; color: #ffb300; text-transform: uppercase; }
-        .product-name { font-size: 1.1rem; font-weight: 700; margin: 5px 0; line-height: 1.2; }
-        .product-desc { font-size: 0.8rem; color: #777; margin-bottom: 5px; }
-        .product-stock { font-size: 0.75rem; color: #999; margin-bottom: 5px; }
-        .product-price { font-size: 1.3rem; color: var(--accent); font-weight: 800; }
+        .product-cat { font-size: 0.75rem; font-weight: 800; color: #FFB300; text-transform: uppercase; letter-spacing: 0.5px; }
+        .product-name { font-size: 1.25rem; font-weight: 800; margin: 5px 0; line-height: 1.2; color: #000; }
+        .product-desc { font-size: 0.9rem; color: #666; margin-bottom: 8px; }
+        .product-stock { font-size: 0.85rem; color: #888; margin-bottom: 5px; }
+        .product-price { font-size: 1.5rem; color: var(--danger); font-weight: 900; }
 
-        /* CONTROLES USUÁRIO */
+        /* CONTROLES (BOTÕES GRANDES) */
         .user-controls-area { padding: 0 15px 15px 15px; }
+        .qty-wrapper { display: flex; align-items: center; justify-content: space-between; background: #f5f5f5; border-radius: 15px; padding: 8px; margin-bottom: 12px; }
+        .qty-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: white; font-weight: bold; cursor: pointer; color: var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-size: 1.5rem; }
+        .qty-val { font-weight: bold; width: 50px; text-align: center; border: none; background: transparent; font-size: 1.2rem; }
         
-        .qty-wrapper { 
-            display: flex; align-items: center; justify-content: space-between; 
-            background: #f4f4f4; border-radius: 12px; padding: 5px; margin-bottom: 10px; 
-        }
-        .qty-btn { 
-            width: 35px; height: 35px; border-radius: 50%; border: none; 
-            background: white; font-weight: bold; cursor: pointer; 
-            color: var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-size: 1.2rem;
-        }
-        .qty-val { font-weight: bold; width: 40px; text-align: center; border: none; background: transparent; }
-        
-        .add-btn { 
-            width: 100%; background: var(--accent); color: var(--primary); 
-            border: none; padding: 12px; border-radius: 12px; 
-            font-weight: 700; cursor: pointer; text-transform: uppercase; 
-        }
+        .add-btn { width: 100%; background: var(--accent); color: var(--primary); border: none; padding: 18px; border-radius: 15px; font-weight: 800; cursor: pointer; text-transform: uppercase; font-size: 1rem; letter-spacing: 1px; }
         .add-btn:active { transform: scale(0.98); }
         .add-btn:disabled { background: #ccc; color: #fff; cursor: not-allowed; }
 
-        /* =========================================
-           PAINEL ADMIN (REDESENHADO)
-           ========================================= */
-        .admin-panel {
-            background-color: #FFF8E1;
-            border: 2px dashed #FFC107;
-            padding: 10px;
-            margin-top: 15px;
-            border-radius: 10px;
-            display: none; /* Escondido por padrão */
-            flex-direction: column;
-            gap: 10px;
-        }
+        /* PAINEL ADMIN */
+        .admin-panel { background-color: #FFF8E1; border: 2px dashed #FFC107; padding: 15px; margin-top: 15px; border-radius: 10px; display: none; flex-direction: column; gap: 10px; }
         .admin-active .admin-panel { display: flex; }
-
-        .admin-label { font-size: 0.8rem; font-weight: bold; color: #666; margin-bottom: 2px; display: block; }
-        
-        .admin-input { 
-            width: 100%; padding: 8px; border: 1px solid #FFC107; 
-            border-radius: 8px; text-align: center; font-weight: bold; background: white;
-        }
-
-        .admin-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-
-        .btn-admin {
-            padding: 10px; border: none; border-radius: 8px; 
-            font-weight: bold; color: white; cursor: pointer; font-size: 0.8rem;
-            display: flex; align-items: center; justify-content: center; gap: 5px;
-        }
-        .btn-save { background-color: var(--success); }
+        .admin-label { font-size: 0.85rem; font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
+        .admin-input { width: 100%; padding: 10px; border: 1px solid #FFC107; border-radius: 8px; text-align: center; font-weight: bold; background: white; font-size: 1.1rem; }
+        .admin-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
+        .btn-admin { padding: 12px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; font-size: 0.9rem; }
+        .btn-save { background-color: #2196F3; } /* Azul para salvar */
         .btn-toggle { background-color: var(--danger); }
-        
-        /* CARRINHO, MODAL, ETC */
-        .sticky-cart-btn { position: fixed; bottom: 20px; right: 20px; background-color: var(--accent); color: var(--primary); padding: 15px 25px; border-radius: 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 12px; font-weight: 800; z-index: 900; cursor: pointer; border: 2px solid var(--primary); }
-        .cart-count-badge { background: var(--primary); color: var(--accent); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        
+
+        /* CARRINHO */
         .cart-section { background: white; border-radius: var(--radius); padding: 25px; box-shadow: 0 -5px 30px rgba(0,0,0,0.15); margin-top: 30px; display: none; }
         .cart-section.open { display: block; }
         
-        /* Modal, Toast e Login styles mantidos para brevidade (são os mesmos do anterior funcional) */
+        .form-input { width: 100%; padding: 15px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 10px; outline: none; font-size: 1rem; }
+        .form-input:focus { border-color: var(--primary); background: #fffde7; }
+
+        /* FLUTUANTES */
+        .sticky-cart-btn { position: fixed; bottom: 20px; right: 20px; background-color: var(--accent); color: var(--primary); padding: 18px 30px; border-radius: 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; font-weight: 800; z-index: 900; cursor: pointer; border: 3px solid var(--primary); font-size: 1.1rem; }
+        .cart-count-badge { background: var(--primary); color: var(--accent); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.9rem; }
+        
+        .sticky-call-btn { position: fixed; bottom: 95px; right: 25px; background-color: #25D366; color: white; padding: 12px 20px; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-decoration: none; font-weight: bold; z-index: 900; display: flex; align-items: center; gap: 8px; font-size: 1rem; border: 2px solid white; }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+        .modal-overlay.open { display: flex; }
+        .modal-card { background: white; width: 100%; max-width: 480px; border-radius: 20px; padding: 25px; max-height: 90vh; overflow-y: auto; }
+        
+        /* TOAST */
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 3000; width: 90%; max-width: 400px; pointer-events: none; }
-        .toast { background: #333; color: #fff; padding: 12px 20px; border-radius: 50px; margin-bottom: 10px; text-align: center; opacity: 0; transition: 0.3s; }
+        .toast { background: #333; color: #fff; padding: 15px 25px; border-radius: 50px; margin-bottom: 10px; text-align: center; opacity: 0; transition: 0.3s; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .toast.visible { opacity: 1; } .toast.success { background: var(--success); } .toast.error { background: var(--danger); }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; }
-        .modal-overlay.open { display: flex; }
-        .modal-card { background: white; width: 90%; max-width: 450px; border-radius: 20px; padding: 20px; }
-        
         .footer { text-align: center; padding: 40px; color: #999; font-size: 0.8rem; }
-        .admin-login-form { display: none; margin-top: 10px; justify-content: center; gap: 5px; }
+        .admin-login-form { display: none; margin-top: 15px; justify-content: center; gap: 8px; }
         .admin-login-form.show { display: flex; }
     </style>
 </head>
@@ -207,28 +135,39 @@
 
     <div id="toast-container"></div>
 
+    <div id="installAppContainer">
+        <p style="margin-bottom:10px; font-weight:bold;">📲 Instale nosso App para facilitar!</p>
+        <button id="installAppBtn" style="background:var(--primary); color:black; border:none; padding:12px 25px; border-radius:30px; font-weight:900; text-transform:uppercase;">INSTALAR AGORA</button>
+    </div>
+
     <div id="receiptModal" class="modal-overlay">
         <div class="modal-card">
-            <h3 style="text-align:center; margin-bottom:15px;">Nota do Pedido</h3>
-            <div id="receiptText" style="background:#f4f4f4; padding:15px; font-family:monospace; white-space:pre-wrap; max-height:300px; overflow-y:auto; margin-bottom:15px;"></div>
-            <button onclick="sendWhatsapp()" style="width:100%; padding:15px; background:#25D366; color:white; border:none; border-radius:10px; font-weight:bold; margin-bottom:10px;">📲 Enviar no WhatsApp</button>
-            <button onclick="closeReceipt()" style="width:100%; padding:10px; background:none; border:1px solid red; color:red; border-radius:10px;">Fechar</button>
+            <h3 style="text-align:center; margin-bottom:10px; color:#333;">🧾 Nota do Pedido</h3>
+            
+            <div style="background:#e8f5e9; border:2px solid #4CAF50; border-radius:10px; padding:15px; margin-bottom:20px; text-align:center;">
+                <p style="font-size:0.9rem; margin-bottom:5px; font-weight:bold; color:#2E7D32;">🔑 Chave PIX (Celular):</p>
+                <div style="font-family:monospace; font-size:1.3rem; background:white; padding:8px; border-radius:6px; border:1px dashed #ccc; font-weight:bold; letter-spacing:1px;">
+                    13988534927
+                </div>
+                <small style="color:#555; font-size:0.8rem; margin-top:5px; display:block;">Daniel Souza Coelho</small>
+            </div>
+
+            <div id="receiptText" style="background:#f4f4f4; padding:15px; font-family:monospace; white-space:pre-wrap; max-height:250px; overflow-y:auto; margin-bottom:15px; font-size:0.9rem; border:1px solid #ddd;"></div>
+            
+            <button onclick="sendWhatsapp()" style="width:100%; padding:18px; background:#25D366; color:white; border:none; border-radius:12px; font-weight:bold; font-size:1.1rem; margin-bottom:10px; box-shadow:0 4px 6px rgba(0,0,0,0.1);">📲 Enviar no WhatsApp</button>
+            <button onclick="closeReceipt()" style="width:100%; padding:12px; background:white; border:2px solid #d32f2f; color:#d32f2f; border-radius:12px; font-weight:bold;">Fechar</button>
         </div>
     </div>
 
     <header class="header">
         <div class="container">
             <img src="logo.png" onerror="this.src='coelho quejos (1).png'" alt="Coelho Queijos" class="logo-img">
-            <div id="installAppContainer" style="display:none; padding:10px; text-align:center; background:#FFF3E0;">
-    <p style="margin-bottom:5px; font-size:0.9rem;">Gostou? Instale nosso App:</p>
-    <button id="installAppBtn" style="background:black; color:white; border:none; padding:10px 20px; border-radius:20px; font-weight:bold;">📲 INSTALAR AGORA</button>
-</div>
         </div>
     </header>
 
     <div class="container">
         <section class="search-section">
-            <input type="search" id="searchInput" class="search-input" placeholder="🔍 O que você procura?">
+            <input type="search" id="searchInput" class="search-input" placeholder="🔍 O que você procura hoje?">
         </section>
 
         <section class="category-scroll">
@@ -242,54 +181,77 @@
 
         <section style="padding-bottom: 20px;">
             <div id="productGrid" class="product-grid"></div>
-            <div id="noResults" style="display:none; text-align:center; padding: 40px; color:#999;">Nada encontrado.</div>
+            <div id="noResults" style="display:none; text-align:center; padding: 40px; color:#999; font-size:1.2rem;">Nenhum produto encontrado.</div>
         </section>
 
         <section class="cart-section" id="cartSection">
-            <h2 style="margin-bottom: 20px; color:var(--accent);">🛒 Sua Cesta</h2>
-            <div id="cartItemsContainer"></div>
-            <div style="text-align: right; font-size: 1.5rem; font-weight: 800; margin: 20px 0;">Total: <span id="cartTotalValue">R$ 0,00</span></div>
-            <button onclick="clearCart()" style="color:red; background:none; border:none; text-decoration:underline;">Esvaziar cesta</button>
+            <h2 style="margin-bottom: 20px; color:var(--accent); font-size:1.8rem;">🛒 Sua Cesta</h2>
             
-            <div style="margin-top:20px; background:#fffbe6; padding:15px; border-radius:10px; border:2px dashed #ffe58f;">
-                <h4>Entrega:</h4>
-                <input type="text" id="clientName" placeholder="Seu Nome" style="width:100%; padding:10px; margin:5px 0; border:1px solid #ddd; border-radius:8px;">
-                <input type="tel" id="clientPhone" placeholder="WhatsApp" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
-                <button onclick="generateReceipt()" style="width:100%; padding:15px; background:var(--accent); color:var(--primary); border:none; border-radius:10px; font-weight:bold; margin-top:10px;">CONCLUIR PEDIDO ✅</button>
+            <div id="cartItemsContainer"></div>
+            
+            <div style="margin-top:30px; background:#fff8e1; padding:20px; border-radius:15px; border:2px dashed #ffb300;">
+                <h4 style="margin-bottom:15px; color:#d48806; font-size:1.2rem;">📍 Dados de Entrega:</h4>
+                
+                <input type="text" id="clientName" placeholder="Seu Nome Completo" class="form-input">
+                <input type="tel" id="clientPhone" placeholder="WhatsApp (com DDD)" class="form-input">
+                
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="clientAddress" placeholder="Endereço (Rua)" class="form-input" style="flex:2;">
+                    <input type="text" id="clientNumber" placeholder="Nº" class="form-input" style="flex:1;">
+                </div>
+                <input type="text" id="clientComp" placeholder="Complemento (Casa, Apto)" class="form-input">
+
+                <label style="font-weight:bold; color:#555; margin-top:10px; display:block;">Selecione o Bairro/Cidade:</label>
+                <select id="deliverySelect" class="form-input" onchange="updateDeliveryFee()" style="background:white; height:50px; font-weight:bold;">
+                    </select>
+
+                <div style="display:flex; justify-content:space-between; margin-top:15px; color:#666; font-size:1.1rem;">
+                    <span>Produtos:</span>
+                    <span id="cartTotalValue">R$ 0,00</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:5px; color:#666; font-size:1.1rem;">
+                    <span>Taxa Entrega:</span>
+                    <span id="deliveryDisplay" style="color:var(--danger); font-weight:bold;">Grátis</span>
+                </div>
+                
+                <hr style="margin:15px 0; border-top:1px dashed #ccc;">
+
+                <div style="display:flex; justify-content:space-between; font-size:1.6rem; font-weight:900; color:var(--accent);">
+                    <span>TOTAL:</span>
+                    <span id="finalTotalDisplay">R$ 0,00</span>
+                </div>
+
+                <button onclick="generateReceipt()" style="width:100%; padding:20px; background:var(--accent); color:var(--primary); border:none; border-radius:15px; font-weight:900; margin-top:20px; font-size:1.2rem; box-shadow:0 5px 15px rgba(0,0,0,0.2);">
+                    ENVIAR PEDIDO ✅
+                </button>
             </div>
+            
+            <button onclick="clearCart()" style="margin-top:20px; width:100%; padding:15px; color:#d32f2f; background:white; border:2px solid #d32f2f; border-radius:10px; font-weight:bold;">🗑️ Esvaziar cesta</button>
         </section>
     </div>
 
+    <a href="tel:5513988534927" class="sticky-call-btn">📞 Ajuda</a>
+    
     <div class="sticky-cart-btn" onclick="toggleCartView()">
         <div class="cart-count-badge" id="floatingCartCount">0</div>
         <span>Ver Cesta</span>
     </div>
 
     <footer class="footer">
-        <p>Coelho Queijos</p>
+        <p>Coelho Queijos • Desde 2017</p>
         <div id="adminArea">
-            <button onclick="document.getElementById('adminLoginForm').classList.toggle('show')" style="background:none; border:1px solid #ccc; padding:5px 15px; border-radius:20px;">Área do Lojista 🔒</button>
+            <button onclick="document.getElementById('adminLoginForm').classList.toggle('show')" style="background:none; border:1px solid #ccc; padding:8px 20px; border-radius:20px; color:#888;">Área do Lojista 🔒</button>
             <div id="adminLoginForm" class="admin-login-form">
-                <input type="password" id="adminPass" placeholder="Senha" style="padding: 5px;">
-                <button onclick="loginAdmin()">Entrar</button>
+                <input type="password" id="adminPass" placeholder="Senha" style="padding:10px; border:1px solid #ccc; border-radius:5px;">
+                <button onclick="loginAdmin()" style="padding:10px 20px; background:#333; color:white; border:none; border-radius:5px;">OK</button>
             </div>
         </div>
     </footer>
 
     <script>
-
-        // --- REGISTRAR PWA (NOVO) ---
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(() => console.log('App pronto para instalar!'))
-                    .catch((err) => console.log('Erro no PWA:', err));
-            });
-        }
-
-
-
-        // CONFIGURAÇÃO - COLOQUE SUAS CHAVES AQUI
+        // ==========================================
+        // CONFIGURAÇÃO DO SISTEMA
+        // ==========================================
         const BIN_ID = '696ad1eeae596e708fe18e2b'; 
         const API_KEY = '$2a$10$11iqh1McgX6s1NSao6L0W.71TsQU602UNg2yJFCzKKYcz1E7p8ZOK'; 
         const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
@@ -320,15 +282,61 @@
             { id: 22, name: "Pão de Queijo", category: "queijos", price: 40.0, image: "pao_queijo.jpeg", desc: "50 Unidades", stock: 10, soldOut: false }
         ];
 
+        // ZONAS DE ENTREGA
+        const deliveryZones = [
+            { name: "Retirar na Loja (Sem taxa)", price: 0.00 },
+            { name: "Cubatão - Centro", price: 6.00 },
+            { name: "Cubatão - Vila Nova", price: 6.00 },
+            { name: "Cubatão - Vila Esperança", price: 5.00 },
+            { name: "Cubatão - Vila Natal", price: 6.00 },
+            { name: "Cubatão - Costa e Silva", price: 7.00 },
+            { name: "Cubatão - Casqueiro", price: 10.00 },
+            { name: "Cubatão - Bolsão 7", price: 12.00 },
+            { name: "Cubatão - Bolsão 8", price: 12.00 },
+            { name: "Cubatão - Bolsão 9", price: 12.00 },
+            { name: "Santos", price: 20.00 },
+            { name: "São Vicente", price: 20.00 },
+            { name: "Praia Grande", price: 35.00 },
+            { name: "Outro Local (Combinar no Zap)", price: 0.00 } 
+        ];
+
+        // VARIÁVEIS DO SISTEMA
         let products = [];
         let cart = [];
         let currentCategory = 'all';
+        let currentDeliveryFee = 0;
         let generatedReceiptText = "";
 
-        document.addEventListener('DOMContentLoaded', () => { loadDataOnline(); });
+        // INICIALIZAÇÃO
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDataOnline(); 
+            initDeliveryOptions();
+            
+            // PWA INSTALADOR
+            let deferredPrompt;
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                document.getElementById('installAppContainer').style.display = 'block';
+            });
+            document.getElementById('installAppBtn').addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') document.getElementById('installAppContainer').style.display = 'none';
+                    deferredPrompt = null;
+                }
+            });
+        });
 
+        // PWA SERVICE WORKER
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+        }
+
+        // --- FUNÇÕES ONLINE ---
         async function loadDataOnline() {
-            showToast("Carregando...", "info");
+            showToast("Verificando estoque...", "info");
             if(BIN_ID.includes("COLE_SEU")) { products = JSON.parse(JSON.stringify(defaultProducts)); renderCatalog(); return; }
             try {
                 const res = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': API_KEY } });
@@ -337,29 +345,22 @@
                 products = data.record;
                 renderCatalog();
             } catch (e) {
+                console.error(e);
                 products = JSON.parse(JSON.stringify(defaultProducts));
                 renderCatalog();
             }
         }
 
         async function saveDataOnline() {
-            if(BIN_ID.includes("COLE_SEU")) return showToast("Configure as chaves!", "error");
-            showToast("Salvando...", "info");
+            if(BIN_ID.includes("COLE_SEU")) return showToast("Erro: Chaves não configuradas", "error");
+            showToast("Salvando nuvem...", "info");
             try {
                 await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify(products) });
-                showToast("Salvo com sucesso!", "success");
-            } catch (e) { showToast("Erro ao salvar.", "error"); }
+                showToast("✅ Salvo com sucesso!", "success");
+            } catch (e) { showToast("Erro ao salvar", "error"); }
         }
 
-        function filterCategory(cat, btn) {
-            currentCategory = cat;
-            document.querySelectorAll('.category-pill').forEach(el => el.classList.remove('active'));
-            btn.classList.add('active');
-            renderCatalog();
-        }
-
-        document.getElementById('searchInput').addEventListener('input', renderCatalog);
-
+        // --- RENDERIZAÇÃO ---
         function renderCatalog() {
             const grid = document.getElementById('productGrid');
             const term = document.getElementById('searchInput').value.toLowerCase();
@@ -393,7 +394,7 @@
                                 <input id="qty-${p.id}" class="qty-val" value="1" readonly>
                                 <button class="qty-btn" onclick="changeQty(${p.id}, 1)">+</button>
                             </div>
-                            <button class="add-btn" onclick="addToCart(${p.id})" ${isSoldOut?'disabled':''}>${isSoldOut?'Indisponível':'Adicionar'}</button>
+                            <button class="add-btn" onclick="addToCart(${p.id})" ${isSoldOut?'disabled':''}>${isSoldOut?'Indisponível':'ADICIONAR'}</button>
 
                             <div class="admin-panel">
                                 <div style="display:flex; gap:5px; margin-bottom:5px;">
@@ -402,7 +403,7 @@
                                         <input type="number" id="admin-stock-${p.id}" class="admin-input" value="${p.stock}">
                                     </div>
                                     <div style="flex:1;">
-                                        <label class="admin-label">Preço (R$):</label>
+                                        <label class="admin-label">Preço:</label>
                                         <input type="number" id="admin-price-${p.id}" class="admin-input" value="${p.price}" step="0.50">
                                     </div>
                                 </div>
@@ -419,145 +420,179 @@
             document.getElementById('noResults').style.display = count === 0 ? 'block' : 'none';
         }
 
-        // CARRINHO
+        // --- CARRINHO & FRETE ---
+        function initDeliveryOptions() {
+            const select = document.getElementById('deliverySelect');
+            select.innerHTML = '';
+            deliveryZones.forEach((zone, index) => {
+                const opt = document.createElement('option');
+                opt.value = index;
+                const priceTxt = zone.price === 0 ? "Grátis" : `R$ ${zone.price.toFixed(2).replace('.',',')}`;
+                opt.text = `${zone.name} (+ ${priceTxt})`;
+                select.appendChild(opt);
+            });
+        }
+
+        function updateDeliveryFee() {
+            const idx = document.getElementById('deliverySelect').value;
+            currentDeliveryFee = deliveryZones[idx].price;
+            document.getElementById('deliveryDisplay').innerText = currentDeliveryFee === 0 ? "Grátis" : `R$ ${currentDeliveryFee.toFixed(2).replace('.',',')}`;
+            calculateFinalTotal();
+        }
+
+        function calculateFinalTotal() {
+            const prodTotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+            const final = prodTotal + currentDeliveryFee;
+            document.getElementById('cartTotalValue').innerText = 'R$ ' + prodTotal.toFixed(2).replace('.',',');
+            document.getElementById('finalTotalDisplay').innerText = 'R$ ' + final.toFixed(2).replace('.',',');
+        }
+
         function changeQty(id, delta) {
             const el = document.getElementById(`qty-${id}`);
             let val = parseInt(el.value) + delta;
             if(val < 1) val = 1;
             el.value = val;
         }
+
         function addToCart(id) {
-            // Vibrar o celular por 200ms (funciona em Android)
-    if (navigator.vibrate) navigator.vibrate(200);
+            if(navigator.vibrate) navigator.vibrate(50); // Vibração
             const p = products.find(x => x.id === id);
             const qty = parseInt(document.getElementById(`qty-${id}`).value);
             if(p.soldOut || p.stock <= 0) return showToast("Esgotado!", "error");
+            
             const item = cart.find(x => x.id === id);
-            const current = item ? item.qty : 0;
-            if(current + qty > p.stock) return showToast("Estoque insuficiente!", "error");
+            const cur = item ? item.qty : 0;
+            if(cur + qty > p.stock) return showToast(`Estoque insuficiente! Restam ${p.stock}`, "error");
+
             if(item) item.qty += qty; else cart.push({...p, qty: qty});
+            
             document.getElementById(`qty-${id}`).value = 1;
             updateCartUI();
-            showToast("Adicionado!", "success");
-            
+            showToast("Adicionado à Cesta!", "success");
         }
+
         function updateCartUI() {
             const container = document.getElementById('cartItemsContainer');
-            const totalEl = document.getElementById('cartTotalValue');
             const badge = document.getElementById('floatingCartCount');
             container.innerHTML = '';
-            let total = 0, count = 0;
-            if(cart.length === 0) container.innerHTML = '<p style="text-align:center;color:#999;">Vazio</p>';
+            let count = 0;
+
+            if(cart.length === 0) container.innerHTML = '<p style="text-align:center; color:#999; padding:20px;">Sua cesta está vazia.</p>';
+
             cart.forEach((i, idx) => {
-                total += i.price * i.qty; count += i.qty;
+                count += i.qty;
                 container.innerHTML += `
-                    <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:10px 0;">
-                        <div><b>${i.name}</b><br><small>${i.qty}x R$ ${i.price.toFixed(2)}</small></div>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <b>R$ ${(i.qty*i.price).toFixed(2)}</b>
-                            <button onclick="cart.splice(${idx},1);updateCartUI()" style="color:red;background:none;border:none;font-weight:bold;">X</button>
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding:15px 0;">
+                        <div>
+                            <div style="font-weight:bold; font-size:1.1rem;">${i.name}</div>
+                            <div style="color:#666;">${i.qty}x R$ ${i.price.toFixed(2)}</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <div style="font-weight:bold; font-size:1.1rem;">R$ ${(i.qty*i.price).toFixed(2).replace('.',',')}</div>
+                            <button onclick="cart.splice(${idx},1); updateCartUI()" style="color:red; background:none; border:none; font-size:1.5rem; font-weight:bold;">&times;</button>
                         </div>
                     </div>`;
             });
-            totalEl.innerText = 'R$ ' + total.toFixed(2).replace('.',',');
             badge.innerText = count;
+            calculateFinalTotal();
         }
-        function clearCart() { if(confirm("Limpar?")) { cart = []; updateCartUI(); } }
+
+        function clearCart() { if(confirm("Limpar toda a cesta?")) { cart = []; updateCartUI(); } }
         function toggleCartView() { 
             const el = document.getElementById('cartSection');
             if(el.style.display==='block'){ el.style.display='none'; } else { el.style.display='block'; el.scrollIntoView({behavior:'smooth'}); }
         }
 
-        // CHECKOUT
+        // --- CHECKOUT ---
         function generateReceipt() {
-            if(cart.length===0) return showToast("Carrinho vazio", "error");
-            const name = document.getElementById('clientName').value;
-            const phone = document.getElementById('clientPhone').value;
-            if(!name || !phone) return showToast("Preencha nome e whats!", "error");
-            let txt = `*PEDIDO - COELHO QUEIJOS*\nNome: ${name}\nWhats: ${phone}\n------------------\n`;
-            let total = 0;
-            cart.forEach(i => { txt += `${i.qty}x ${i.name} (R$ ${(i.qty*i.price).toFixed(2)})\n`; total += i.qty*i.price; });
-            txt += `------------------\n*TOTAL: R$ ${total.toFixed(2)}*`;
+            if(cart.length===0) return showToast("Cesta vazia!", "error");
+            const name = document.getElementById('clientName').value.trim();
+            const phone = document.getElementById('clientPhone').value.trim();
+            const addr = document.getElementById('clientAddress').value.trim();
+            const num = document.getElementById('clientNumber').value.trim();
+            const comp = document.getElementById('clientComp').value.trim();
+
+            if(!name || !phone) {
+                document.querySelector('.cart-section').scrollIntoView({behavior:'smooth'});
+                return showToast("Preencha Nome e WhatsApp!", "error");
+            }
+            if(currentDeliveryFee > 0 && !addr) {
+                 return showToast("Preencha o endereço!", "error");
+            }
+
+            const dataHora = new Date().toLocaleString('pt-BR');
+            const zoneIdx = document.getElementById('deliverySelect').value;
+            const zoneName = deliveryZones[zoneIdx].name;
+
+            let txt = `*PEDIDO - COELHO QUEIJOS*\n`;
+            txt += `📅 ${dataHora}\n`;
+            txt += `👤 ${name}\n📱 ${phone}\n`;
+            
+            if(currentDeliveryFee > 0) {
+                txt += `📍 Entrega: ${zoneName}\n   ${addr}, ${num} ${comp ? '- '+comp : ''}\n`;
+            } else {
+                txt += `📍 *RETIRADA NO BALCÃO*\n`;
+            }
+            
+            txt += `------------------\n`;
+            let sub = 0;
+            cart.forEach(i => {
+                txt += `${i.qty}x ${i.name} (R$ ${(i.qty*i.price).toFixed(2)})\n`;
+                sub += i.qty*i.price;
+            });
+            txt += `------------------\n`;
+            txt += `Subtotal: R$ ${sub.toFixed(2).replace('.',',')}\n`;
+            txt += `Entrega: ${currentDeliveryFee===0?'Grátis':'R$ '+currentDeliveryFee.toFixed(2).replace('.',',')}\n`;
+            txt += `*TOTAL: R$ ${(sub+currentDeliveryFee).toFixed(2).replace('.',',')}*\n`;
+            
             generatedReceiptText = txt;
             document.getElementById('receiptText').innerText = txt;
             document.getElementById('receiptModal').classList.add('open');
         }
+
         function closeReceipt() { document.getElementById('receiptModal').classList.remove('open'); }
         function sendWhatsapp() { window.open(`https://wa.me/5513988534927?text=${encodeURIComponent(generatedReceiptText)}`); }
-        function copyReceipt() { navigator.clipboard.writeText(generatedReceiptText); showToast("Copiado!", "success"); }
 
-        // ADMIN
+        // --- ADMIN ---
         function loginAdmin() {
             if(document.getElementById('adminPass').value === 'admin') {
                 document.body.classList.add('admin-active');
                 document.getElementById('adminLoginForm').classList.remove('show');
-                showToast("Modo Admin: ATIVADO", "success");
+                showToast("Modo Admin Ativo!", "success");
                 renderCatalog();
-            } else { showToast("Senha errada", "error"); }
+            } else { showToast("Senha inválida", "error"); }
         }
-       function adminUpdateData(id) {
-            // Pega os inputs
-            const stockInput = document.getElementById(`admin-stock-${id}`);
-            const priceInput = document.getElementById(`admin-price-${id}`);
-            
-            const newStock = parseInt(stockInput.value);
-            const newPrice = parseFloat(priceInput.value);
 
+        function adminUpdateData(id) {
+            const stock = parseInt(document.getElementById(`admin-stock-${id}`).value);
+            const price = parseFloat(document.getElementById(`admin-price-${id}`).value);
             const p = products.find(x => x.id === id);
-            
             if(p) {
-                // Atualiza Estoque
-                p.stock = newStock;
-                // Atualiza Preço (se for válido)
-                if(!isNaN(newPrice) && newPrice > 0) {
-                    p.price = newPrice;
-                }
-
-                // Lógica automática de Esgotado
-                if(p.stock > 0) p.soldOut = false;
-                if(p.stock <= 0) p.soldOut = true;
-
-                // Salva na nuvem e atualiza a tela
-                saveDataOnline().then(() => {
-                    renderCatalog();
-                    // Atualiza carrinho caso o preço tenha mudado e alguém tenha no carrinho
-                    // (Opcional, mas boa prática: limpar carrinho ou recalcular)
-                    updateCartUI(); 
-                });
+                p.stock = stock;
+                if(!isNaN(price) && price > 0) p.price = price;
+                if(p.stock > 0) p.soldOut = false; else p.soldOut = true;
+                saveDataOnline().then(() => renderCatalog());
             }
         }
+
         function adminToggleStatus(id) {
             const p = products.find(x => x.id === id);
             if(p) { p.soldOut = !p.soldOut; saveDataOnline().then(() => renderCatalog()); }
         }
-        function showAdminForm() { document.getElementById('adminLoginForm').classList.toggle('show'); }
+
+        function filterCategory(cat, btn) {
+            currentCategory = cat;
+            document.querySelectorAll('.category-pill').forEach(el => el.classList.remove('active'));
+            btn.classList.add('active');
+            renderCatalog();
+        }
+        document.getElementById('searchInput').addEventListener('input', renderCatalog);
+
         function showToast(msg, type) {
             const t = document.createElement('div'); t.className = `toast ${type}`; t.innerText = msg;
             document.getElementById('toast-container').appendChild(t);
             setTimeout(()=>t.classList.add('visible'),10); setTimeout(()=>t.remove(),3000);
         }
-
-            let deferredPrompt;
-const installContainer = document.getElementById('installAppContainer');
-const installBtn = document.getElementById('installAppBtn');
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installContainer.style.display = 'block'; // Mostra o botão
-});
-
-installBtn.addEventListener('click', async () => {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-            installContainer.style.display = 'none';
-        }
-        deferredPrompt = null;
-    }
-});
-
     </script>
 </body>
 </html>
